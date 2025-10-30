@@ -1,0 +1,8 @@
+<h2>Network Dashboard (IP Simulation)</h2>
+<ul>
+  {% for roll, ip in ip_data.items() %}
+    <li>{{ roll }} → {{ ip }}</li>
+  {% endfor %}
+</ul>
+<a href="{{ url_for('admin_dashboard') }}">Back</a>
+

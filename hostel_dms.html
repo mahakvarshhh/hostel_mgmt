@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hostel Management System</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts - Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+        .container-card {
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+        }
+        .btn-primary {
+            @apply bg-blue-600 text-white rounded-lg font-semibold px-4 py-2 transition-colors duration-300 hover:bg-blue-700;
+        }
+        .btn-danger {
+            @apply bg-red-600 text-white rounded-lg font-semibold px-4 py-2 transition-colors duration-300 hover:bg-red-700;
+        }
+        .btn-warning {
+            @apply bg-yellow-400 text-gray-800 rounded-lg font-semibold px-4 py-2 transition-colors duration-300 hover:bg-yellow-500;
+        }
+        .input-field {
+            @apply w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500;
+        }
+        .dashboard-section {
+            @apply mb-8;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-start justify-center p-8">
+
+    <div id="app" class="w-full max-w-6xl">
+        <!-- Loading state -->
+        <div id="loading-spinner" class="flex flex-col items-center justify-center min-h-screen" style="display: none;">
+            <div class="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500"></div>
+            <p class="mt-4 text-lg text-gray-500">Loading...</p>
+        </div>
+
+        <!-- Role Selection Screen -->
+        <div id="role-selection" class="flex flex-col items-center justify-center min-h-screen">
+            <div class="container-card w-full max-w-sm text-center">
+                <h1 class="text-3xl font-bold text-gray-800 mb-6">Select Your Role</h1>
+                <div class="space-y-4">
+                    <button onclick="selectRole('admin')" class="w-full btn-primary">Admin</button>
+                    <button onclick="selectRole('staff')" class="w-full btn-primary">Staff</button>
+                    <button onclick="selectRole('student')" class="w-full btn-primary">Student</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Admin Dashboard -->
+        <div id="admin-dashboard" class="hidden">
+            <div class="flex items-center justify-between mb-8">
+                <h1 class="text-4xl font-bold text-gray-800">Admin Dashboard</h1>
+                <button id="logout-btn" class="btn-primary">Logout</button>
+            </div>
+            <div id="flash-messages" class="mb-4"></div>
+
+            <!-- Student Management -->
+            <div class="dashboard-section container-card">
+                <h2 class="text-2xl font-bold mb-4 border-b pb-2">Students Management</h2>
+                <div class="flex justify-end mb-4">
+                    <button onclick="showRegisterForm('student')" class="btn-primary">Register New Student</button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full bg-white rounded-lg shadow-sm">
+                        <thead>
+                            <tr class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
+                                <th class="py-3 px-6 text-left">ID</th>
+                                <th class="py-3 px-6 text-left">Name</th>
+                                <th class="py-3 px-6 text-left">Email</th>
+                                <th class="py-3 px-6 text-left">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="students-table" class="text-gray-600 text-sm font-light">
+                            <!-- Student data will be populated here by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Staff Management -->
+            <div class="dashboard-section container-card">
+                <h2 class="text-2xl font-bold mb-4 border-b pb-2">Staff Management</h2>
+                <div class="flex justify-end mb-4">
+                    <button onclick="showRegisterForm('staff')" class="btn-primary">Register New Staff</button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full bg-white rounded-lg shadow-sm">
+                        <thead>
+                            <tr class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
+                                <th class="py-3 px-6 text-left">ID</th>
+                                <th class="py-3 px-6 text-left">Name</th>
+                                <th class="py-3 px-6 text-left">Email</th>
+                                <th class="py-3 px-6 text-left">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="staff-table" class="text-gray-600 text-sm font-light">
+                            <!-- Staff data will be populated here by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Gate Passes Management -->
+            <div class="dashboard-section container-card">
+                <h2 class="text-2xl font-bold mb-4 border-b pb-2">Gate Pass Requests</h2>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full bg-white rounded-lg shadow-sm">
+                        <thead>
+                            <tr class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
+                                <th class="py-3 px-6 text-left">Student</th>
+                                <th class="py-3 px-6 text-left">Reason</th>
+                                <th class="py-3 px-6 text-left">Status</th>
+                                <th class="py-3 px-6 text-left">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="gate-passes-table" class="text-gray-600 text-sm font-light">
+                            <!-- Gate pass data will be populated here by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Complaints Management -->
+            <div class="dashboard-section container-card">
+                <h2 class="text-2xl font-bold mb-4 border-b pb-2">Student Complaints</h2>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full bg-white rounded-lg shadow-sm">
+                        <thead>
+                            <tr class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
+                                <th class="py-3 px-6 text-left">Student</th>
+                                <th class="py-3 px-6 text-left">Complaint</th>
+                                <th class="py-3 px-6 text-left">Status</th>
+                                <th class="py-3 px-6 text-left">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="complaints-table" class="text-gray-600 text-sm font-light">
+                            <!-- Complaints data will be populated here by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Fees Management -->
+            <div class="dashboard-section container-card">
+                <h2 class="text-2xl font-bold mb-4 border-b pb-2">Fee Management</h2>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full bg-white rounded-lg shadow-sm">
+                        <thead>
+                            <tr class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
+                                <th class="py-3 px-6 text-left">Student</th>
+                                <th class="py-3 px-6 text-left">Amount Due</th>
+                                <th class="py-3 px-6 text-left">Amount Paid</th>
+                                <th class="py-3 px-6 text-left">Balance</th>
+                                <th class="py-3 px-6 text-left">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="fees-table" class="text-gray-600 text-sm font-light">
+                            <!-- Fees data will be populated here by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modals for Forms -->
+        <div id="form-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden">
+            <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+                <h3 id="form-title" class="text-xl font-semibold mb-4 text-center"></h3>
+                <form id="data-form" class="space-y-4">
+                    <!-- Form fields will be dynamically generated by JS -->
+                    <div id="form-fields" class="space-y-4"></div>
+                    <div class="flex justify-between mt-6">
+                        <button type="submit" class="btn-primary w-1/2">Submit</button>
+                        <button type="button" onclick="closeModal()" class="btn-danger w-1/2 ml-4">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script type="module">
+        // Global variables provided by the environment
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
+        import { getAuth, signInWithCustomToken, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
+        import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
+
+        let app, auth, db;
+        let currentRole = null;
+        let activeListeners = [];
+
+        window.onload = async () => {
+            const loadingSpinner = document.getElementById('loading-spinner');
+            const roleSelection = document.getElementById('role-selection');
+            const adminDashboard = document.getElementById('admin-dashboard');
+
+            if (!firebaseConfig) {
+                console.error("Firebase config is missing.");
+                showFlashMessage("Firebase configuration is missing. Please contact support.", "danger");
+                loadingSpinner.style.display = 'none';
+                return;
+            }
+
+            loadingSpinner.style.display = 'flex';
+
+            app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            db = getFirestore(app);
+
+            try {
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                } else {
+                    await signInAnonymously(auth);
+                }
+
+                currentRole = localStorage.getItem('userRole');
+                if (currentRole) {
+                    await showDashboard(currentRole);
+                } else {
+                    roleSelection.style.display = 'flex';
+                }
+
+            } catch (error) {
+                console.error("Firebase auth error:", error);
+                showFlashMessage("Authentication failed. " + error.message, "danger");
+            } finally {
+                loadingSpinner.style.display = 'none';
+            }
+        };
+
+        window.selectRole = async (role) => {
+            localStorage.setItem('userRole', role);
+            currentRole = role;
+            await showDashboard(role);
+        };
+
+        async function showDashboard(role) {
+            document.getElementById('role-selection').style.display = 'none';
+            document.getElementById('admin-dashboard').style.display = 'none';
+            
+            // Only admin-dashboard is implemented for now.
+            if (role === 'admin') {
+                document.getElementById('admin-dashboard').style.display = 'block';
+                await loadAdminDashboardData();
+            } else {
+                showFlashMessage("The " + role + " dashboard is not yet implemented.", "info");
+                setTimeout(() => window.location.reload(), 3000); // Redirect back to role selection
+            }
+        }
+
+        async function loadAdminDashboardData() {
+            // Clear previous listeners
+            activeListeners.forEach(unsubscribe => unsubscribe());
+            activeListeners = [];
+
+            const userId = auth.currentUser?.uid || 'anonymous';
+            const collectionPath = `artifacts/${appId}/users/${userId}`;
+
+            // Listen for real-time changes to students
+            const studentsCollection = collection(db, `${collectionPath}/students`);
+            const studentsListener = onSnapshot(studentsCollection, (snapshot) => {
+                const studentsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderTable('students-table', studentsData, ['id', 'name', 'email'], ['edit', 'delete'], 'student');
+            });
+            activeListeners.push(studentsListener);
+
+            // Listen for real-time changes to staff
+            const staffCollection = collection(db, `${collectionPath}/staff`);
+            const staffListener = onSnapshot(staffCollection, (snapshot) => {
+                const staffData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderTable('staff-table', staffData, ['id', 'name', 'email'], ['edit', 'delete'], 'staff');
+            });
+            activeListeners.push(staffListener);
+            
+            // The following data is hardcoded for demonstration
+            renderTable('gate-passes-table', [{id: "gp1", student: "John Doe", reason: "Family visit", status: "Pending"}], ['student', 'reason', 'status'], ['approve', 'reject'], 'gate_pass');
+            renderTable('complaints-table', [{id: "c1", student: "Jane Smith", text: "Wi-Fi is slow", status: "Pending"}], ['student', 'text', 'status'], ['resolve'], 'complaint');
+            renderTable('fees-table', [{id: "f1", student: "John Doe", amount_due: "5000", amount_paid: "4500", balance: "500"}], ['student', 'amount_due', 'amount_paid', 'balance'], ['record_payment'], 'fee');
+        }
+
+        function renderTable(tableId, data, columns, actions, type) {
+            const tableBody = document.getElementById(tableId);
+            tableBody.innerHTML = '';
+            data.forEach(item => {
+                const row = document.createElement('tr');
+                row.className = 'border-b border-gray-200 hover:bg-gray-100';
+                
+                columns.forEach(col => {
+                    const cell = document.createElement('td');
+                    cell.className = 'py-3 px-6 text-left whitespace-nowrap';
+                    cell.textContent = item[col];
+                    row.appendChild(cell);
+                });
+                
+                // Action buttons
+                const actionCell = document.createElement('td');
+                actionCell.className = 'py-3 px-6 text-left';
+                
+                actions.forEach(action => {
+                    const button = document.createElement('button');
+                    button.textContent = action.charAt(0).toUpperCase() + action.slice(1);
+                    button.className = `font-bold rounded-lg text-sm px-3 py-1 mr-2 transition-colors duration-300 ${action === 'edit' ? 'btn-warning' : action === 'delete' ? 'btn-danger' : 'btn-primary'}`;
+                    button.onclick = () => handleAction(action, type, item.id);
+                    actionCell.appendChild(button);
+                });
+                
+                row.appendChild(actionCell);
+                tableBody.appendChild(row);
+            });
+        }
+        
+        async function handleAction(action, type, id) {
+            const userId = auth.currentUser?.uid || 'anonymous';
+            const docRef = doc(db, `artifacts/${appId}/users/${userId}/${type}s`, id);
+            
+            try {
+                switch (action) {
+                    case 'edit':
+                        showFormModal(type, id);
+                        break;
+                    case 'delete':
+                        if (confirm(`Are you sure you want to delete this ${type}?`)) {
+                            await deleteDoc(docRef);
+                            showFlashMessage(`${type.charAt(0).toUpperCase() + type.slice(1)} deleted successfully!`, "success");
+                        }
+                        break;
+                    default:
+                        showFlashMessage(`Action '${action}' not yet implemented for ${type}.`, "info");
+                }
+            } catch (error) {
+                console.error("Error handling action:", error);
+                showFlashMessage("An error occurred. Please try again.", "danger");
+            }
+        }
+
+        let currentDocId = null;
+        let currentFormType = null;
+        
+        window.showRegisterForm = (type) => {
+            currentDocId = null; // New item
+            showFormModal(type, null);
+        };
+        
+        async function showFormModal(type, docId) {
+            currentFormType = type;
+            currentDocId = docId;
+            const formTitle = document.getElementById('form-title');
+            const formFields = document.getElementById('form-fields');
+            formFields.innerHTML = '';
+
+            formTitle.textContent = docId ? `Edit ${type.charAt(0).toUpperCase() + type.slice(1)}` : `Register New ${type.charAt(0).toUpperCase() + type.slice(1)}`;
+
+            const fields = getFormFields(type);
+            let docData = {};
+            if (docId) {
+                try {
+                    const docRef = doc(db, `artifacts/${appId}/users/${auth.currentUser?.uid || 'anonymous'}/${type}s`, docId);
+                    const docSnap = await getDoc(docRef);
+                    if (docSnap.exists()) {
+                        docData = docSnap.data();
+                    }
+                } catch (error) {
+                    console.error("Error fetching document:", error);
+                    showFlashMessage("Could not load data for editing.", "danger");
+                    closeModal();
+                    return;
+                }
+            }
+
+            fields.forEach(field => {
+                const label = document.createElement('label');
+                label.className = 'block text-gray-700 font-medium mb-1';
+                label.textContent = field.label;
+                
+                const input = document.createElement('input');
+                input.type = field.type;
+                input.id = field.name;
+                input.name = field.name;
+                input.required = true;
+                input.className = 'input-field';
+                input.value = docId ? (docData[field.name] || '') : '';
+                
+                const div = document.createElement('div');
+                div.appendChild(label);
+                div.appendChild(input);
+                formFields.appendChild(div);
+            });
+            
+            document.getElementById('form-modal').style.display = 'block';
+        }
+
+        function getFormFields(type) {
+            if (type === 'student') {
+                return [
+                    { name: 'name', label: 'Name', type: 'text' },
+                    { name: 'email', label: 'Email', type: 'email' },
+                    { name: 'roll', label: 'Roll Number', type: 'text' }
+                ];
+            } else if (type === 'staff') {
+                return [
+                    { name: 'name', label: 'Name', type: 'text' },
+                    { name: 'email', label: 'Email', type: 'email' },
+                    { name: 'department', label: 'Department', type: 'text' }
+                ];
+            }
+            return [];
+        }
+
+        document.getElementById('data-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
+            
+            const userId = auth.currentUser?.uid || 'anonymous';
+            const collectionRef = collection(db, `artifacts/${appId}/users/${userId}/${currentFormType}s`);
+            
+            try {
+                if (currentDocId) {
+                    await setDoc(doc(collectionRef, currentDocId), data, { merge: true });
+                    showFlashMessage(`${currentFormType.charAt(0).toUpperCase() + currentFormType.slice(1)} updated successfully!`, "success");
+                } else {
+                    const newDocRef = doc(collectionRef);
+                    await setDoc(newDocRef, data);
+                    showFlashMessage(`${currentFormType.charAt(0).toUpperCase() + currentFormType.slice(1)} registered successfully!`, "success");
+                }
+                closeModal();
+            } catch (error) {
+                console.error("Error saving data:", error);
+                showFlashMessage("An error occurred while saving. Please try again.", "danger");
+            }
+        });
+
+        window.closeModal = () => {
+            document.getElementById('form-modal').style.display = 'none';
+        };
+
+        window.showFlashMessage = (message, type) => {
+            const flashContainer = document.getElementById('flash-messages');
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `bg-${type === 'success' ? 'green-100 text-green-700' : type === 'danger' ? 'red-100 text-red-700' : 'blue-100 text-blue-700'} p-4 rounded-lg mb-4`;
+            alertDiv.textContent = message;
+            flashContainer.appendChild(alertDiv);
+            setTimeout(() => alertDiv.remove(), 5000);
+        };
+        
+        document.getElementById('logout-btn').addEventListener('click', () => {
+            localStorage.removeItem('userRole');
+            window.location.reload();
+        });
+
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1/plugin/relativeTime.js"></script>
+    <script>
+        dayjs.extend(dayjs_plugin_relativeTime);
+    </script>
+</body>
+</html>
+

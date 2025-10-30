@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Staff Dashboard</title>
+  <!-- Inter Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      font-family: "Inter", sans-serif;
+    }
+    /* Keyframes for animations */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    .fade-in-up {
+      animation: fadeInUp 0.6s ease-out forwards;
+    }
+  </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+  <div class="container mx-auto p-4 sm:p-6 lg:p-8">
+    <!-- Header and Logout -->
+    <header
+      class="flex flex-col sm:flex-row justify-between items-center mb-6 fade-in-up"
+    >
+      <h1 class="text-3xl sm:text-4xl font-bold text-gray-800 mb-4 sm:mb-0">
+        Staff Dashboard
+      </h1>
+      <a
+        href="{{ url_for('logout') }}"
+        class="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-6 rounded-lg shadow-md transition transform hover:scale-105"
+      >
+        Logout
+      </a>
+    </header>
+
+    <!-- Flash Notifications -->
+    <div class="space-y-3 fade-in-up mb-6">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div
+              class="flex items-center justify-between p-4 rounded-lg shadow-md 
+                     {% if category == 'success' %} bg-green-100 border border-green-300 text-green-800 
+                     {% elif category == 'error' %} bg-red-100 border border-red-300 text-red-800 
+                     {% else %} bg-blue-100 border border-blue-300 text-blue-800 {% endif %} 
+                     animate-slide-in"
+            >
+              <span class="font-medium">{{ message }}</span>
+              <button
+                onclick="this.parentElement.remove();"
+                class="ml-4 text-gray-500 hover:text-gray-700 focus:outline-none"
+              >
+                ✖
+              </button>
+            </div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+    </div>
+
+    <!-- Main Content -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <!-- Product Management Card -->
+      <div class="bg-white p-6 rounded-2xl shadow-xl fade-in-up">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-2xl font-semibold text-gray-700">
+            🛒 Product Management
+          </h2>
+          <a
+            href="{{ url_for('staff_add_product') }}"
+            class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition transform hover:scale-105"
+          >
+            + Add New
+          </a>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="min-w-full bg-white border border-gray-200 rounded-lg">
+            <thead class="bg-gray-50">
+              <tr>
+                <th
+                  class="py-3 px-4 text-left text-sm font-medium text-gray-500 uppercase"
+                >
+                  Product Name
+                </th>
+                <th
+                  class="py-3 px-4 text-left text-sm font-medium text-gray-500 uppercase"
+                >
+                  Price (₹)
+                </th>
+                <th
+                  class="py-3 px-4 text-left text-sm font-medium text-gray-500 uppercase"
+                >
+                  Min. Quantity
+                </th>
+                <th
+                  class="py-3 px-4 text-left text-sm font-medium text-gray-500 uppercase"
+                >
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200">
+              {% for product in products %}
+              <tr class="hover:bg-gray-50 transition">
+                <td class="py-4 px-4 text-sm font-medium text-gray-900">
+                  {{ product.name }}
+                </td>
+                <td class="py-4 px-4 text-sm text-gray-500">
+                  ₹{{ "%.2f"|format(product.price) }}
+                </td>
+                <td class="py-4 px-4 text-sm text-gray-500">
+                  {{ product.min_quantity or '0' }}
+                </td>
+                <td class="py-4 px-4 text-sm font-medium">
+  <div class="flex items-center space-x-2">
+    <a
+      href="{{ url_for('staff_edit_product', product_id=product.id) }}"
+      class="text-blue-600 hover:text-blue-800 transition"
+    >
+      Edit
+    </a>
+    <span class="text-gray-400">|</span>
+    
+    <!-- Delete with confirmation -->
+    <form
+      action="{{ url_for('staff_delete_product', product_id=product.id) }}"
+      method="POST"
+      style="display:inline;"
+      onsubmit="return confirm('Are you sure you want to delete this product?');"
+    >
+      <button
+        type="submit"
+        class="text-red-600 hover:text-red-800 transition"
+      >
+        Delete
+      </button>
+    </form>
+  </div>
+</td>
+
+              </tr>
+              {% else %}
+              <tr>
+                <td
+                  colspan="4"
+                  class="py-4 px-4 text-center text-sm text-gray-500"
+                >
+                  No products found.
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+
+<!-- Orders Card -->
+<div class="bg-white p-6 rounded-2xl shadow-xl fade-in-up">
+  <h2 class="text-2xl font-semibold text-gray-700 mb-4">📦 Orders ({{ orders|length }})</h2>
+  <div class="overflow-x-auto">
+    {% if orders %}
+    <table class="min-w-full bg-white border border-gray-200 rounded-lg">
+      <thead class="bg-gray-50">
+        <tr>
+          <th class="py-3 px-4 text-left text-sm font-medium text-gray-500 uppercase">Order ID</th>
+          <th class="py-3 px-4 text-left text-sm font-medium text-gray-500 uppercase">Student</th>
+          <th class="py-3 px-4 text-left text-sm font-medium text-gray-500 uppercase">Product</th>
+          <th class="py-3 px-4 text-left text-sm font-medium text-gray-500 uppercase">Quantity</th>
+          <th class="py-3 px-4 text-left text-sm font-medium text-gray-500 uppercase">Total Price</th>
+          <th class="py-3 px-4 text-left text-sm font-medium text-gray-500 uppercase">Status</th>
+          <th class="py-3 px-4 text-left text-sm font-medium text-gray-500 uppercase">Ordered At</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-200">
+{% for order in orders %}
+<tr class="hover:bg-gray-50 transition">
+  <td class="py-4 px-4 text-sm font-medium text-gray-900">{{ order.id }}</td>
+  <td class="py-4 px-4 text-sm text-gray-500">{{ order.student.name }} (Roll: {{ order.student.roll }})</td>
+  <td class="py-4 px-4 text-sm text-gray-500">{{ order.product.name }}</td>
+  <td class="py-4 px-4 text-sm text-gray-500">{{ order.quantity }}</td>
+  <td class="py-4 px-4 text-sm text-gray-500">₹{{ "%.2f"|format(order.total_price) }}</td>
+  <td class="py-4 px-4 text-sm text-gray-500">{{ order.status }}</td>
+  <td class="py-4 px-4 text-sm text-gray-500">{{ order.ordered_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+  <td class="py-4 px-4 text-sm font-medium">
+  <div class="flex items-center space-x-2">
+    <!-- Delivered Button -->
+    <form action="{{ url_for('update_order_status', order_id=order.id) }}" method="POST">
+      <input type="hidden" name="status" value="Delivered">
+      <button type="submit"
+        {% if order.status != 'Pending' %} disabled class="bg-gray-400 cursor-not-allowed text-white py-1 px-3 rounded-md" 
+        {% else %} class="bg-blue-500 hover:bg-blue-600 text-white py-1 px-3 rounded-md transition" 
+        {% endif %}
+      >
+        Deliver
+      </button>
+    </form>
+
+    <!-- Delete Button -->
+    <form action="{{ url_for('delete_order', order_id=order.id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this order?');">
+      <button type="submit" 
+        class="bg-red-500 hover:bg-red-600 text-white py-1 px-3 rounded-md transition">
+        Delete
+      </button>
+    </form>
+  </div>
+</td>
+
+</tr>
+{% endfor %}
+</tbody>
+
+    </table>
+    {% else %}
+    <p class="text-gray-500 text-center py-8">No orders found.</p>
+    {% endif %}
+  </div>
+</div>
+
+
+      <!-- Pending Gate Passes -->
+      <div class="bg-white p-6 rounded-2xl shadow-xl fade-in-up">
+        <h2 class="text-2xl font-semibold text-gray-700 mb-4">
+          🚪 Pending Gate Passes ({{ pending_gate_passes|length }})
+        </h2>
+        <div class="overflow-x-auto">
+          {% if pending_gate_passes %}
+          <table class="min-w-full bg-white border border-gray-200 rounded-lg">
+            <thead class="bg-gray-50">
+              <tr>
+                <th
+                  class="py-3 px-4 text-left text-sm font-medium text-gray-500 uppercase"
+                >
+                  Student
+                </th>
+                <th
+                  class="py-3 px-4 text-left text-sm font-medium text-gray-500 uppercase"
+                >
+                  Reason
+                </th>
+                <th
+                  class="py-3 px-4 text-left text-sm font-medium text-gray-500 uppercase"
+                >
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200">
+              {% for gate_pass in pending_gate_passes %}
+              <tr class="hover:bg-gray-50 transition">
+                <td class="py-4 px-4 text-sm font-medium text-gray-900">
+                  {{ gate_pass.student.name }}
+                </td>
+                <td class="py-4 px-4 text-sm text-gray-500">
+                  {{ gate_pass.reason }}
+                </td>
+                <td class="py-4 px-4 text-sm font-medium">
+                  <div class="flex items-center space-x-2">
+                    <a
+                      href="{{ url_for('approve_gate_pass', gp_id=gate_pass.id) }}"
+                      class="bg-green-500 hover:bg-green-600 text-white font-semibold py-1 px-3 rounded-md transition transform hover:scale-105"
+                    >
+                      Approve
+                    </a>
+                    <a
+                      href="{{ url_for('reject_gate_pass', gp_id=gate_pass.id) }}"
+                      class="bg-red-500 hover:bg-red-600 text-white font-semibold py-1 px-3 rounded-md transition transform hover:scale-105"
+                    >
+                      Reject
+                    </a>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          {% else %}
+          <p class="text-gray-500 text-center py-8">
+            No pending gate pass requests.
+          </p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

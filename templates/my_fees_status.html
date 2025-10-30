@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Fees Status</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f4f4f4; padding: 20px; }
+        .container { max-width: 900px; margin: auto; background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);}
+        h1 { text-align: center; color: #4CAF50; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: center; }
+        th { background-color: #4CAF50; color: white; }
+
+        .status-badge { padding: 4px 8px; border-radius: 4px; font-weight: bold; }
+        .status-badge.paid { background: #d4edda; color: #155724; }
+        .status-badge.pending { background: #fff3cd; color: #856404; }
+        .status-badge.future { background: #cce5ff; color: #004085; }
+
+        .btn.pay-now {
+            padding: 8px 15px;
+            background: linear-gradient(90deg, #4CAF50, #45a049);
+            border: none;
+            border-radius: 5px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .btn.pay-now:hover {
+            background: linear-gradient(90deg, #45a049, #399738);
+            transform: scale(1.05);
+        }
+
+        a.back-dashboard {
+            margin-top: 20px;
+            display: inline-block;
+            background:#4CAF50;
+            color:white;
+            padding:10px 20px;
+            border-radius:5px;
+            text-decoration:none;
+            font-weight:bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+    <h1>Monthly Fees Status</h1>
+
+    <!-- Flash messages: place this BEFORE the table -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div>
+          {% for category, message in messages %}
+            <div class="flash {{ category }}" style="padding:10px; margin-bottom:10px; border-radius:5px; 
+                {% if category=='success' %}background:#d4edda;color:#155724;{% elif category=='error' %}background:#f8d7da;color:#721c24;{% endif %}">
+              {{ message }}
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <table>
+        <thead>
+            <tr>
+                <th>Month</th>
+                <th>Amount Due</th>
+                <th>Amount Paid</th>
+                <th>Balance</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for fee in months %}
+            <tr>
+                <td>{{ fee.month }} {{ fee.year }}</td>
+                <td>Rs.{{ "%.2f"|format(fee.amount_due) }}</td>
+                <td>Rs.{{ "%.2f"|format(fee.amount_paid) }}</td>
+                <td>Rs.{{ "%.2f"|format(fee.amount_due - fee.amount_paid) }}</td>
+                <td>{{ fee.status }}</td>
+                <td>
+                    {% if fee.status == 'Pending' %}
+                    <form action="{{ url_for('pay_fee', fee_id=fee.id) }}" method="post">
+                        <button type="submit" class="btn btn-success btn-sm">💳 Pay Now</button>
+                    </form>
+                    {% else %}
+                          {{ fee.status }}
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+            
+        </tbody>
+    </table>
+
+    <a href="{{ url_for('student_dashboard') }}" class="back-dashboard">Back to Dashboard</a>
+</div>
+
+ 
+</body>
+</html>

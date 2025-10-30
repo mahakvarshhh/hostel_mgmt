@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>All Staff</title>
+</head>
+<body>
+  <h1>Registered Staff</h1>
+  <table border="1" cellpadding="8">
+    <tr>
+      <th>ID</th>
+      <th>Name</th>
+      <th>Position</th>
+    </tr>
+    {% for staff in staff_list %}
+    <tr>
+      <td>{{ staff.id }}</td>
+      <td>{{ staff.name }}</td>
+      <td>{{ staff.position }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  <br>
+  <a href="{{ url_for('admin_dashboard') }}">Back to Dashboard</a>
+</body>
+</html>
+

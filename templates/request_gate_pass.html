@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Request Gate Pass</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 600px;
+            background-color: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        h1 {
+            color: #4CAF50;
+            margin-bottom: 1.5rem;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            text-align: left;
+        }
+
+        label {
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        input[type="text"], input[type="date"], textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 1rem;
+        }
+
+        textarea {
+            resize: vertical;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 1rem;
+            font-size: 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+        
+        .back-button {
+            display: inline-block;
+            margin-top: 1.5rem;
+            padding: 0.75rem 1.5rem;
+            background-color: #4CAF50;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            text-align: center;
+            transition: background-color 0.3s ease;
+        }
+
+        .back-button:hover {
+            background-color: #45a049;
+        }
+    </style>
+
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Request Gate Pass</h1>
+        <form action="{{ url_for('request_gate_pass') }}" method="POST">
+            <div class="mb-3">
+                <label for="reason" class="form-label">Reason</label>
+                <input type="text" name="reason" id="reason" class="form-control" 
+                       placeholder="Enter reason for gate pass" 
+                       value="{{ form_data.reason }}" required>
+            </div>
+            <div class="mb-3">
+                <label for="leave_date" class="form-label">Leave Date</label>
+                <input type="date" name="leave_date" id="leave_date" class="form-control" 
+                       value="{{ form_data.leave_date }}" required>
+            </div>
+            <div class="mb-3">
+                <label for="return_date" class="form-label">Return Date</label>
+                <input type="date" name="return_date" id="return_date" class="form-control" 
+                       value="{{ form_data.return_date }}" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Request Gate Pass</button>
+        </form>
+
+        <a href="{{ url_for('student_dashboard') }}" class="back-button">Back to Dashboard</a>
+    </div>
+
+    <!-- SweetAlert2 popup -->
+
+<div id="flash" data-success="{{ success_message }}" data-error="{{ error_message }}"></div>
+
+<script>
+window.onload = function() {
+    const flash = document.getElementById('flash');
+    const success = flash.dataset.success;
+    const error = flash.dataset.error;
+
+    if (success) {
+        Swal.fire({ icon:'success', title:'Success!', text: success, timer:3000, showConfirmButton:false });
+    }
+    if (error) {
+        Swal.fire({ icon:'error', title:'Error!', text: error, timer:3000, showConfirmButton:false });
+    }
+};
+</script>
+
+
+</body>
+</html>

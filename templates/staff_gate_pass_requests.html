@@ -1,0 +1,31 @@
+<h2>Pending Gate Pass Requests</h2>
+<a href="{{ url_for('staff_dashboard') }}">Back to Dashboard</a>
+
+{% if requests %}
+    <table>
+  <tr>
+    <th>Student</th>
+    <th>Reason</th>
+    <th>Leave Date</th>
+    <th>Return Date</th>
+    <th>Status</th>
+    <th>Actions</th>
+  </tr>
+  {% for gp in requests %}
+  <tr>
+    <td>{{ gp.student.name }}</td>
+    <td>{{ gp.reason }}</td>
+    <td>{{ gp.leave_date }}</td>
+    <td>{{ gp.return_date }}</td>
+    <td>{{ gp.status }}</td>
+    <td>
+      <a href="{{ url_for('handle_gate_pass', gp_id=gp.id, action='approve') }}">Approve</a> |
+      <a href="{{ url_for('handle_gate_pass', gp_id=gp.id, action='reject') }}">Reject</a>
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+
+{% else %}
+    <p>No pending requests.</p>
+{% endif %}

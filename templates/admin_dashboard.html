@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>Admin Dashboard</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body { background: linear-gradient(135deg, #f5f7fa, #c3cfe2); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #333; }
+    .navbar { background: linear-gradient(90deg, #4b0082, #800080); box-shadow: 0px 4px 12px rgba(0,0,0,0.2); }
+    .dashboard-container { padding-top:50px; animation:fadeIn 1s ease-in; }
+    h1,h2,h3,h4 { font-weight:600; color:#4b0082; }
+    .card { border-radius:15px; background:rgba(255,255,255,0.8); backdrop-filter:blur(10px); border:none; box-shadow:0px 8px 20px rgba(0,0,0,0.1); transition:transform 0.3s ease, box-shadow 0.3s ease; }
+    .card:hover { transform:translateY(-5px); box-shadow:0px 12px 24px rgba(0,0,0,0.15); }
+    .btn-green { background: linear-gradient(45deg,#6a0dad,#9b59b6); color:#fff; border:none; transition:transform 0.2s ease, box-shadow 0.2s ease; }
+    .btn-green:hover { transform:scale(1.05); box-shadow:0px 6px 15px rgba(0,0,0,0.2); }
+    table { border-radius:12px; overflow:hidden; animation:fadeUp 1s ease; }
+    thead { background:#4b0082; color:#fff; }
+    tbody tr { transition: background 0.3s ease, transform 0.2s ease; }
+    tbody tr:hover { background:#f3e8ff; transform: scale(1.01); }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes fadeUp { from { opacity:0; transform:translateY(30px); } to { opacity:1; transform:translateY(0); } }
+    .alert { border-radius:10px; box-shadow:0px 4px 10px rgba(0,0,0,0.1); }
+    .modal-content { border-radius:20px; background:#fff; box-shadow:0px 6px 20px rgba(0,0,0,0.2); animation:fadeIn 0.5s ease; }
+  </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark">
+  <div class="container-fluid">
+    <a class="navbar-brand fw-bold" href="{{ url_for('admin_dashboard') }}">Admin Dashboard</a>
+    <div class="collapse navbar-collapse">
+      <ul class="navbar-nav ms-auto">
+        <li class="nav-item"><a class="btn btn-danger shadow-sm" href="{{ url_for('logout') }}">Logout</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<div class="container dashboard-container">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <h1 class="mb-4 text-center">Welcome, Admin 👩‍💻</h1>
+
+  <!-- Students Section -->
+  <h3 class="mt-4 mb-3">📋 All Students</h3>
+  <table class="table table-striped shadow-sm">
+    <thead>
+      <tr>
+        <th>Name</th><th>Roll No</th><th>Room</th><th>Last Active</th><th>IP Address</th><th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for s in students %}
+      <tr>
+  <td>{{ s.name }}</td>
+  <td>{{ s.roll }}</td>
+  <td>
+    {% if s.room %}
+      <span class="badge bg-primary">{{ s.room.room_no }}</span>
+    {% else %}
+      <span class="badge bg-secondary">Unassigned</span>
+    {% endif %}
+  </td>
+  <td>
+    {% if s.last_active %}
+      {% set local_time = s.last_active.astimezone(local_tz) %}
+      {% set diff_seconds = (datetime.now(local_tz) - local_time).total_seconds() %}
+      {% if diff_seconds > 86400 %}
+        <span class="text-danger">{{ local_time.strftime('%Y-%m-%d %H:%M:%S') }} (Inactive)</span>
+      {% else %}
+        <span class="text-success fw-bold">{{ local_time.strftime('%Y-%m-%d %H:%M:%S') }} (Active)</span>
+      {% endif %}
+    {% else %} N/A {% endif %}
+  </td>
+  <td>{{ s.last_active_ip or 'N/A' }}</td>
+  <td>
+    {% if s.room %}
+      <a href="{{ url_for('assign_room', student_id=s.id) }}" class="btn btn-sm btn-primary">Change Room</a>
+    {% else %}
+      <a href="{{ url_for('assign_room', student_id=s.id) }}" class="btn btn-sm btn-success">Assign Room</a>
+    {% endif %}
+    <button class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#editStudentModal{{ s.id }}">Edit</button>
+    <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteStudentModal{{ s.id }}">Delete</button>
+  </td>
+</tr>
+
+
+      <!-- Student Modals -->
+      <div class="modal fade" id="editStudentModal{{ s.id }}" tabindex="-1">
+        <div class="modal-dialog"><div class="modal-content">
+          <form method="POST" action="{{ url_for('edit_student', student_id=s.id) }}">
+            <div class="modal-header bg-warning"><h5 class="modal-title">Edit {{ s.name }}</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+              <input type="text" name="roll" class="form-control mb-2" value="{{ s.roll }}" required>
+              <input type="text" name="name" class="form-control mb-2" value="{{ s.name }}" required>
+              <input type="email" name="email" class="form-control mb-2" value="{{ s.email }}" required>
+              <input type="password" name="password" class="form-control mb-2" placeholder="Enter new password (leave blank to keep current)">
+            </div>
+            <div class="modal-footer"><button class="btn btn-warning">Save</button></div>
+          </form>
+        </div></div>
+      </div>
+
+      <div class="modal fade" id="deleteStudentModal{{ s.id }}" tabindex="-1">
+        <div class="modal-dialog"><div class="modal-content">
+          <div class="modal-header bg-danger text-white"><h5 class="modal-title">Confirm Delete</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+          <div class="modal-body">Are you sure you want to delete <strong>{{ s.name }}</strong>?</div>
+          <div class="modal-footer">
+            <form method="POST" action="{{ url_for('delete_student', student_id=s.id) }}"><button class="btn btn-danger">Yes, Delete</button></form>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          </div>
+        </div></div>
+      </div>
+      {% endfor %}
+    </tbody>
+  </table>
+  <button class="btn btn-success mt-3" data-bs-toggle="modal" data-bs-target="#addStudentModal">Add Student</button>
+
+  <!-- Staff Section -->
+  <h3 class="mt-5 mb-3">👨‍🏫 Staff Members</h3>
+  <table class="table table-striped shadow-sm">
+    <thead><tr><th>Name</th><th>Department</th><th>Email</th><th>Actions</th></tr></thead>
+    <tbody>
+      {% for s in staff %}
+      <tr>
+        <td>{{ s.name }}</td><td>{{ s.department }}</td><td>{{ s.email }}</td>
+        <td>
+          <button class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#editStaffModal{{ s.id }}">Edit</button>
+          <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteStaffModal{{ s.id }}">Delete</button>
+        </td>
+      </tr>
+
+      <!-- Staff Modals -->
+      <div class="modal fade" id="editStaffModal{{ s.id }}" tabindex="-1">
+        <div class="modal-dialog"><div class="modal-content">
+          <form method="POST" action="{{ url_for('edit_staff', staff_id=s.id) }}">
+            <div class="modal-header bg-warning"><h5 class="modal-title">Edit {{ s.name }}</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+              <input type="text" name="name" class="form-control mb-2" value="{{ s.name }}" required>
+              <input type="email" name="email" class="form-control mb-2" value="{{ s.email }}" required>
+              <input type="text" name="department" class="form-control mb-2" value="{{ s.department }}" required>
+            </div>
+            <div class="modal-footer"><button class="btn btn-warning">Save</button></div>
+          </form>
+        </div></div>
+      </div>
+
+      <div class="modal fade" id="deleteStaffModal{{ s.id }}" tabindex="-1">
+        <div class="modal-dialog"><div class="modal-content">
+          <div class="modal-header bg-danger text-white"><h5 class="modal-title">Confirm Delete</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+          <div class="modal-body">Are you sure you want to delete <strong>{{ s.name }}</strong>?</div>
+          <div class="modal-footer">
+            <form method="POST" action="{{ url_for('delete_staff', staff_id=s.id) }}"><button class="btn btn-danger">Yes, Delete</button></form>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          </div>
+        </div></div>
+      </div>
+      {% endfor %}
+    </tbody>
+  </table>
+  <button class="btn btn-success mt-3" data-bs-toggle="modal" data-bs-target="#addStaffModal">Add Staff</button>
+
+  <!-- Rooms Section -->
+  <h3 class="mt-5 mb-3">🏠 Rooms</h3>
+  <table class="table table-bordered table-striped">
+    <thead class="table-dark"><tr><th>Room No</th><th>Capacity</th><th>Occupied</th><th>Available</th></tr></thead>
+    <tbody>
+      {% for room in rooms %}
+      <tr>
+        <td>{{ room.room_no }}</td><td>{{ room.capacity }}</td><td>{{ room.occupied }}</td><td>{{ room.capacity - room.occupied }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <!-- Complaints Section -->
+  <h3 class="mt-5 mb-3">📄 Student Complaints</h3>
+  <table class="table table-striped">
+    <thead><tr><th>Student</th><th>Title</th><th>Description</th><th>Status</th><th>Action</th></tr></thead>
+    <tbody>
+      {% for complaint in complaints %}
+      <tr>
+        <td>{{ complaint.student.name }}</td>
+        <td>{{ complaint.title }}</td>
+        <td>{{ complaint.description }}</td>
+        <td>
+          {% if complaint.status == "Resolved" %}
+            <span class="badge bg-success">Resolved</span>
+          {% else %}
+            <span class="badge bg-warning text-dark">Pending</span>
+          {% endif %}
+        </td>
+        <td>
+  {% if complaint.status != "Resolved" %}
+    <form method="POST" action="{{ url_for('resolve_complaint', complaint_id=complaint.id) }}">
+      <input type="hidden" name="complaint_id" value="{{ complaint.id }}">
+      <button class="btn btn-sm btn-success">Mark Resolved</button>
+    </form>
+  {% else %}
+    <button class="btn btn-sm btn-secondary" disabled>Resolved</button>
+  {% endif %}
+</td>
+ {% endfor %}
+  </tbody>
+</table>
+<!-- Gate Passes Section (Admin View) -->
+<h3 class="mt-5 mb-3">🚪 Gate Pass Requests</h3>
+<table class="table table-striped shadow-sm">
+  <thead>
+    <tr>
+      <th>Student</th>
+      <th>Reason</th>
+      <th>Status</th>
+      <th>Requested At</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for gp in gate_passes %}
+    <tr>
+      <td>{{ gp.student.name }}</td>
+      <td>{{ gp.reason }}</td>
+      <td>
+        {% if gp.status == "Approved" %}
+          <span class="badge bg-success">Approved</span>
+        {% elif gp.status == "Rejected" %}
+          <span class="badge bg-danger">Rejected</span>
+        {% else %}
+          <span class="badge bg-warning text-dark">Pending</span>
+        {% endif %}
+      </td>
+      <td>{{ gp.date_requested.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+
+    </tr>
+    {% else %}
+    <tr>
+      <td colspan="4" class="text-center text-muted">No gate pass requests found.</td>
+    </tr>
+   
+
+
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- Add Student Modal -->
+<div class="modal fade" id="addStudentModal" tabindex="-1">
+  <div class="modal-dialog"><div class="modal-content">
+    <form method="POST" action="{{ url_for('add_student') }}">
+      <div class="modal-header"><h5 class="modal-title">Add Student</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body">
+        <input type="text" name="roll" class="form-control mb-2" placeholder="Roll No" required>
+        <input type="text" name="name" class="form-control mb-2" placeholder="Full Name" required>
+        <input type="email" name="email" class="form-control mb-2" placeholder="Email" required>
+        <input type="password" name="password" class="form-control mb-2" placeholder="Password" required>
+      </div>
+      <div class="modal-footer"><button class="btn btn-primary">Add</button></div>
+    </form>
+  </div></div>
+</div>
+
+<!-- Add Staff Modal -->
+<div class="modal fade" id="addStaffModal" tabindex="-1">
+  <div class="modal-dialog"><div class="modal-content">
+    <form method="POST" action="{{ url_for('add_staff') }}">
+      <div class="modal-header"><h5 class="modal-title">Add Staff</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body">
+        <input type="text" name="name" class="form-control mb-2" placeholder="Full Name" required>
+        <input type="email" name="email" class="form-control mb-2" placeholder="Email" required>
+        <input type="password" name="password" class="form-control mb-2" placeholder="Password" required>
+        <input type="text" name="department" class="form-control mb-2" placeholder="Department" required>
+      </div>
+      <div class="modal-footer"><button class="btn btn-primary">Add</button></div>
+    </form>
+  </div></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
